@@ -13,9 +13,11 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        dialog.cpp
+        dialog.cpp \
+    gamearea.cpp
 
-HEADERS  += dialog.h
+HEADERS  += dialog.h \
+    gamearea.h
 
 FORMS    += dialog.ui
 
