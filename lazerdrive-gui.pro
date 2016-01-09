@@ -30,3 +30,6 @@ else:unix: LIBS += -L$$PWD/QLazerDriveClient/ -lQLazerDriveClient
 
 INCLUDEPATH += $$PWD/QLazerDriveClient
 DEPENDPATH += $$PWD/QLazerDriveClient
+
+RESOURCES += \
+    resources.qrc
