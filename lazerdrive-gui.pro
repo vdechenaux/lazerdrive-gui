@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui websockets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -14,12 +14,15 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         dialog.cpp \
-    gamearea.cpp
+    gamearea.cpp \
+    usernamedialog.cpp
 
 HEADERS  += dialog.h \
-    gamearea.h
+    gamearea.h \
+    usernamedialog.h
 
-FORMS    += dialog.ui
+FORMS    += dialog.ui \
+    usernamedialog.ui
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/QLazerDriveClient/release/ -lQLazerDriveClient
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/QLazerDriveClient/debug/ -lQLazerDriveClient
