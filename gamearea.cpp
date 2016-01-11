@@ -128,8 +128,9 @@ void GameArea::paintEvent(QPaintEvent *event)
     int height = this->geometry().height();
     double factor = 0.1;
 
-    int playerX = roomWidth / 2;
-    int playerY = roomHeight / 2;
+    CacheEntry me = m_pPlayerCache->value(m_playerId);
+    int playerX = me.x == 0 && me.y == 0 ? roomWidth/2 : me.x;
+    int playerY = me.x == 0 && me.y == 0 ? roomHeight/2 : me.y;
 
     QPainter painter;
     painter.begin(this);
@@ -141,17 +142,21 @@ void GameArea::paintEvent(QPaintEvent *event)
     int diffTopBorder = 0 - playerY;
     int diffRightBorder = roomWidth - playerX;
     int diffBottomBorder = roomHeight - playerY;
-    int leftBorderScreenUnit = qMax((width/2) + (diffLeftBorder * factor), 0.0);
-    int topBorderScreenUnit = qMax((height/2) + (diffTopBorder * factor), 0.0);
+    int leftBorderScreenUnit = (width/2) + (diffLeftBorder * factor);
+    int topBorderScreenUnit = (height/2) + (diffTopBorder * factor);
     int rightBorderScreenUnit = (width/2) + (diffRightBorder * factor);
     int bottomBorderScreenUnit = (height/2) + (diffBottomBorder * factor);
-    painter.fillRect(QRect(leftBorderScreenUnit, topBorderScreenUnit, rightBorderScreenUnit, bottomBorderScreenUnit), QColor(4, 20, 40));
+    painter.fillRect(QRect(qMax(leftBorderScreenUnit, 0), qMax(topBorderScreenUnit, 0), rightBorderScreenUnit, bottomBorderScreenUnit), QColor(4, 20, 40));
 
     painter.setPen(QColor(8, 40, 80));
     for (int x=leftBorderScreenUnit; x<rightBorderScreenUnit; x+=100) {
+        if (x<0)
+            continue;
         painter.drawLine(x, topBorderScreenUnit, x, bottomBorderScreenUnit);
     }
     for (int y=topBorderScreenUnit; y<bottomBorderScreenUnit; y+=100) {
+        if (y<0)
+            continue;
         painter.drawLine(leftBorderScreenUnit, y, rightBorderScreenUnit, y);
     }
 
