@@ -19,6 +19,10 @@ GameArea::GameArea(QWidget *parent) : QOpenGLWidget(parent)
     connect(m_pClient, SIGNAL(playerLeftTheGame(QLazerDrivePlayer,bool)), this, SLOT(clientPlayerLeftTheGame(QLazerDrivePlayer,bool)));
     connect(m_pClient, SIGNAL(existingPlayerInitialized(QLazerDrivePlayer,uint,uint)), this, SLOT(clientExistingPlayerInitialized(QLazerDrivePlayer,uint,uint)));
     connect(m_pClient, SIGNAL(playerThicknessChanged(uint,uint)), this, SLOT(clientPlayerThicknessChanged(uint,uint)));
+    connect(m_pClient, SIGNAL(mapErased()), this, SLOT(clientMapErased()));
+    connect(m_pClient, SIGNAL(playerPrintChanged(uint,bool)), this, SLOT(clientPlayerPrintChanged(uint,bool)));
+    connect(m_pClient, SIGNAL(playerImuneChanged(uint,bool)), this, SLOT(clientPlayerImuneChanged(uint,bool)));
+    connect(m_pClient, SIGNAL(playerReversed(uint,bool)), this, SLOT(clientPlayerReversed(uint,bool)));
 
     connect(m_pUsernameDialog, SIGNAL(completed(QString)), m_pClient, SLOT(enterTheGame(QString)));
     connect(m_pUsernameDialog, SIGNAL(nextColor()), m_pClient, SLOT(nextColor()));
@@ -65,13 +69,39 @@ void GameArea::clientExistingPlayerInitialized(QLazerDrivePlayer player, uint x,
 {
     Q_UNUSED(x);
     Q_UNUSED(y);
-    m_pPlayerCache->insert(player.id(), CacheEntry(player));
+    m_pPlayerCache->insert(player.id(), CacheEntry(player, x, y));
 }
 
 void GameArea::clientPlayerThicknessChanged(uint playerId, uint thickness)
 {
     CacheEntry cached = m_pPlayerCache->value(playerId);
     cached.thickness = thickness;
+    m_pPlayerCache->insert(playerId, cached);
+}
+
+void GameArea::clientMapErased()
+{
+    m_pTraceList->clear();
+}
+
+void GameArea::clientPlayerPrintChanged(uint playerId, bool isPrinting)
+{
+    CacheEntry cached = m_pPlayerCache->value(playerId);
+    cached.isPrinting = isPrinting;
+    m_pPlayerCache->insert(playerId, cached);
+}
+
+void GameArea::clientPlayerImuneChanged(uint playerId, bool isImune)
+{
+    CacheEntry cached = m_pPlayerCache->value(playerId);
+    cached.isImune = isImune;
+    m_pPlayerCache->insert(playerId, cached);
+}
+
+void GameArea::clientPlayerReversed(uint playerId, bool isReversed)
+{
+    CacheEntry cached = m_pPlayerCache->value(playerId);
+    cached.isReversed = isReversed;
     m_pPlayerCache->insert(playerId, cached);
 }
 
@@ -83,6 +113,11 @@ void GameArea::clientPlayerTraceInitialized(uint playerId, uint x, uint y, uint 
 void GameArea::clientPlayerMoved(uint playerId, uint x, uint y, qreal angle)
 {
     CacheEntry cached = m_pPlayerCache->value(playerId);
+    cached.x = x;
+    cached.y = y;
+    m_pPlayerCache->insert(playerId, cached);
+    if (cached.isImune || !cached.isPrinting)
+        return;
     m_pTraceList->append(Trace(playerId, x, y, angle, cached.thickness, cached.player.r(), cached.player.g(), cached.player.b()));
 }
 
@@ -128,6 +163,16 @@ void GameArea::paintEvent(QPaintEvent *event)
 
         QPoint point((width / 2) + (xDiff * factor), (height / 2) + (yDiff * factor));
         painter.setBrush(QBrush(QColor(trace.r, trace.g, trace.b)));
+        painter.drawEllipse(point, thicknessScaled, thicknessScaled);
+    }
+
+    foreach (CacheEntry cached, *m_pPlayerCache) {
+        int xDiff = cached.x - playerX;
+        int yDiff = cached.y - playerY;
+        int thicknessScaled = cached.thickness * factor;
+
+        QPoint point((width / 2) + (xDiff * factor), (height / 2) + (yDiff * factor));
+        painter.setBrush(QBrush(QColor(cached.player.r(), cached.player.g(), cached.player.b())));
         painter.drawEllipse(point, thicknessScaled, thicknessScaled);
     }
 

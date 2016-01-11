@@ -31,11 +31,17 @@ public:
 
     struct CacheEntry {
         QLazerDrivePlayer player;
-        uint thickness;
-        CacheEntry(QLazerDrivePlayer _player = QLazerDrivePlayer(), uint _thickness = 50)
+        uint x, y, thickness;
+        bool isImune, isPrinting, isReversed;
+        CacheEntry(QLazerDrivePlayer _player = QLazerDrivePlayer(), uint _x = 0, uint _y = 0, uint _thickness = 50, bool _isImune = false, bool _isPrinting = false, bool _isReversed = false)
         {
             player = _player;
+            x = _x;
+            y = _y;
             thickness = _thickness;
+            isImune = _isImune;
+            isPrinting = _isPrinting;
+            isReversed = _isReversed;
         }
     };
 signals:
@@ -48,6 +54,10 @@ private slots:
     void clientPlayerLeftTheGame(QLazerDrivePlayer player, bool isAlias);
     void clientExistingPlayerInitialized(QLazerDrivePlayer player, uint x, uint y);
     void clientPlayerThicknessChanged(uint playerId, uint thickness);
+    void clientMapErased();
+    void clientPlayerPrintChanged(uint playerId, bool isPrinting);
+    void clientPlayerImuneChanged(uint playerId, bool isImune);
+    void clientPlayerReversed(uint playerId, bool isReversed);
 private:
     QList<Trace> *m_pTraceList;
     QMap<uint, CacheEntry> *m_pPlayerCache;
