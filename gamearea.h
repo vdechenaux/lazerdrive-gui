@@ -17,6 +17,8 @@ class GameArea : public QOpenGLWidget
     QTimer m_RefreshTimer;
     uint m_playerId, m_avatarId;
     void paintEvent(QPaintEvent *event);
+    void keyPressEvent(QKeyEvent *event);
+    void keyReleaseEvent(QKeyEvent *event);
 public:
     explicit GameArea(QWidget *parent = 0);
     ~GameArea();

@@ -3,6 +3,7 @@
 GameArea::GameArea(QWidget *parent) : QOpenGLWidget(parent)
 {
     setMinimumSize(800, 600);
+    setFocusPolicy(Qt::StrongFocus);
 
     m_pTraceList = new QList<Trace>();
     m_pPlayerCache = new QMap<uint, CacheEntry>();
@@ -182,4 +183,25 @@ void GameArea::paintEvent(QPaintEvent *event)
     }
 
     painter.end();
+}
+
+void GameArea::keyPressEvent(QKeyEvent *event)
+{
+    if (event->isAutoRepeat())
+        return;
+    if (event->key() == Qt::Key_Right) {
+        m_pClient->pressArrow(QLazerDrivePlayer::RightPressed);
+    }
+    else if (event->key() == Qt::Key_Left) {
+        m_pClient->pressArrow(QLazerDrivePlayer::LeftPressed);
+    }
+}
+
+void GameArea::keyReleaseEvent(QKeyEvent *event)
+{
+    if (event->isAutoRepeat())
+        return;
+    if (event->key() == Qt::Key_Right || event->key() == Qt::Key_Left) {
+        m_pClient->releaseArrow();
+    }
 }
