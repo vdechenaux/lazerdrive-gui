@@ -4,6 +4,10 @@ GameArea::GameArea(QWidget *parent) : QOpenGLWidget(parent)
 {
     setMinimumSize(800, 600);
 
+    m_pTraceList = new QList<Trace>();
+    m_pPlayerCache = new QMap<uint, CacheEntry>();
+    m_playerId = m_avatarId = 0;
+
     m_pUsernameDialog = new UsernameDialog(this);
 
     m_pClient = new QLazerDriveClient(this);
@@ -11,6 +15,10 @@ GameArea::GameArea(QWidget *parent) : QOpenGLWidget(parent)
     connect(m_pClient, SIGNAL(nextColorReceived(uint,uint,uint)), m_pUsernameDialog, SLOT(setColor(uint, uint, uint)));
     connect(m_pClient, SIGNAL(playerTraceInitialized(uint,uint,uint,uint,uint,uint,uint,uint)), this, SLOT(clientPlayerTraceInitialized(uint,uint,uint,uint,uint,uint,uint,uint)));
     connect(m_pClient, SIGNAL(playerMoved(uint,uint,uint,qreal)), this, SLOT(clientPlayerMoved(uint,uint,uint,qreal)));
+    connect(m_pClient, SIGNAL(playerEnteredTheGame(QLazerDrivePlayer,bool,bool)), this, SLOT(clientPlayerEnteredTheGame(QLazerDrivePlayer,bool,bool)));
+    connect(m_pClient, SIGNAL(playerLeftTheGame(QLazerDrivePlayer,bool)), this, SLOT(clientPlayerLeftTheGame(QLazerDrivePlayer,bool)));
+    connect(m_pClient, SIGNAL(existingPlayerInitialized(QLazerDrivePlayer,uint,uint)), this, SLOT(clientExistingPlayerInitialized(QLazerDrivePlayer,uint,uint)));
+    connect(m_pClient, SIGNAL(playerThicknessChanged(uint,uint)), this, SLOT(clientPlayerThicknessChanged(uint,uint)));
 
     connect(m_pUsernameDialog, SIGNAL(completed(QString)), m_pClient, SLOT(enterTheGame(QString)));
     connect(m_pUsernameDialog, SIGNAL(nextColor()), m_pClient, SLOT(nextColor()));
@@ -22,6 +30,12 @@ GameArea::GameArea(QWidget *parent) : QOpenGLWidget(parent)
     m_RefreshTimer.start(1000 / 30);
 }
 
+GameArea::~GameArea()
+{
+    delete m_pTraceList;
+    delete m_pPlayerCache;
+}
+
 void GameArea::clientConnected(QLazerDrivePlayer player)
 {
     m_pUsernameDialog->setUsername(player.name());
@@ -29,14 +43,47 @@ void GameArea::clientConnected(QLazerDrivePlayer player)
     m_pUsernameDialog->show();
 }
 
+void GameArea::clientPlayerEnteredTheGame(QLazerDrivePlayer player, bool isMyself, bool isAlias)
+{
+    m_pPlayerCache->insert(player.id(), CacheEntry(player));
+    if (isMyself) {
+        if (isAlias) {
+            m_avatarId = player.id();
+        } else {
+            m_playerId = player.id();
+        }
+    }
+}
+
+void GameArea::clientPlayerLeftTheGame(QLazerDrivePlayer player, bool isAlias)
+{
+    Q_UNUSED(isAlias);
+    m_pPlayerCache->remove(player.id());
+}
+
+void GameArea::clientExistingPlayerInitialized(QLazerDrivePlayer player, uint x, uint y)
+{
+    Q_UNUSED(x);
+    Q_UNUSED(y);
+    m_pPlayerCache->insert(player.id(), CacheEntry(player));
+}
+
+void GameArea::clientPlayerThicknessChanged(uint playerId, uint thickness)
+{
+    CacheEntry cached = m_pPlayerCache->value(playerId);
+    cached.thickness = thickness;
+    m_pPlayerCache->insert(playerId, cached);
+}
+
 void GameArea::clientPlayerTraceInitialized(uint playerId, uint x, uint y, uint angle, uint thickness, uint r, uint g, uint b)
 {
-    m_traceList.append(Trace(playerId, x, y, angle, thickness, r, g, b));
+    m_pTraceList->append(Trace(playerId, x, y, angle, thickness, r, g, b));
 }
 
 void GameArea::clientPlayerMoved(uint playerId, uint x, uint y, qreal angle)
 {
-    m_traceList.append(Trace(playerId, x, y, angle, 50, 255, 0, 0)); // TODO: load color + thickness from cache
+    CacheEntry cached = m_pPlayerCache->value(playerId);
+    m_pTraceList->append(Trace(playerId, x, y, angle, cached.thickness, cached.player.r(), cached.player.g(), cached.player.b()));
 }
 
 void GameArea::paintEvent(QPaintEvent *event)
@@ -74,7 +121,7 @@ void GameArea::paintEvent(QPaintEvent *event)
     }
 
     painter.setPen(Qt::NoPen);
-    foreach (Trace trace, m_traceList) {
+    foreach (Trace trace, *m_pTraceList) {
         int xDiff = trace.x - playerX;
         int yDiff = trace.y - playerY;
         int thicknessScaled = trace.thickness * factor;
