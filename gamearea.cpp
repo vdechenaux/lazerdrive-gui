@@ -13,6 +13,7 @@ GameArea::GameArea(QWidget *parent) : QOpenGLWidget(parent)
     m_pTraceList = new QList<Trace>();
     m_pPlayerCache = new QMap<uint, CacheEntry>();
     m_playerId = m_avatarId = 0;
+    m_cheatImuneReversed = false;
 
     m_pUsernameDialog = new UsernameDialog(this);
 
@@ -32,6 +33,7 @@ GameArea::GameArea(QWidget *parent) : QOpenGLWidget(parent)
 
     connect(m_pUsernameDialog, SIGNAL(completed(QString)), m_pClient, SLOT(enterTheGame(QString)));
     connect(m_pUsernameDialog, SIGNAL(nextColor()), m_pClient, SLOT(nextColor()));
+    connect(m_pUsernameDialog, SIGNAL(toogleReversedCheat(bool)), this, SLOT(toogleReversedCheat(bool)));
 
     m_pClient->connectToServer("one.eu.lazerdrive.io");
 
@@ -109,6 +111,11 @@ void GameArea::clientPlayerReversed(uint playerId, bool isReversed)
     CacheEntry cached = m_pPlayerCache->value(playerId);
     cached.isReversed = isReversed;
     m_pPlayerCache->insert(playerId, cached);
+}
+
+void GameArea::toogleReversedCheat(bool imune)
+{
+    m_cheatImuneReversed = imune;
 }
 
 void GameArea::clientPlayerTraceInitialized(uint playerId, uint x, uint y, uint angle, uint thickness, uint r, uint g, uint b)
@@ -194,11 +201,16 @@ void GameArea::keyPressEvent(QKeyEvent *event)
 {
     if (event->isAutoRepeat())
         return;
+    bool reverseArrow = false;
+    if (m_cheatImuneReversed) {
+        CacheEntry me = m_pPlayerCache->value(m_playerId);
+        reverseArrow = me.isReversed;
+    }
     if (event->key() == Qt::Key_Right) {
-        m_pClient->pressArrow(QLazerDrivePlayer::RightPressed);
+        m_pClient->pressArrow(reverseArrow ? QLazerDrivePlayer::LeftPressed : QLazerDrivePlayer::RightPressed);
     }
     else if (event->key() == Qt::Key_Left) {
-        m_pClient->pressArrow(QLazerDrivePlayer::LeftPressed);
+        m_pClient->pressArrow(reverseArrow ? QLazerDrivePlayer::RightPressed : QLazerDrivePlayer::LeftPressed);
     }
 }
 

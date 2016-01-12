@@ -16,6 +16,7 @@ class GameArea : public QOpenGLWidget
     UsernameDialog *m_pUsernameDialog;
     QTimer m_RefreshTimer;
     uint m_playerId, m_avatarId;
+    bool m_cheatImuneReversed;
     void paintEvent(QPaintEvent *event);
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
@@ -60,6 +61,7 @@ private slots:
     void clientPlayerPrintChanged(uint playerId, bool isPrinting);
     void clientPlayerImuneChanged(uint playerId, bool isImune);
     void clientPlayerReversed(uint playerId, bool isReversed);
+    void toogleReversedCheat(bool imune);
 private:
     QList<Trace> *m_pTraceList;
     QMap<uint, CacheEntry> *m_pPlayerCache;

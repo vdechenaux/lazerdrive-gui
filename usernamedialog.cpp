@@ -38,3 +38,8 @@ void UsernameDialog::setColor(uint r, uint g, uint b)
     ui->pushButton_play->setStyleSheet(style);
     ui->pushButton_color->setStyleSheet(style);
 }
+
+void UsernameDialog::on_checkBox_cheat_reversed_toggled(bool checked)
+{
+    emit toogleReversedCheat(checked);
+}
