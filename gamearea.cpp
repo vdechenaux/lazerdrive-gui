@@ -3,6 +3,11 @@
 GameArea::GameArea(QWidget *parent) : QOpenGLWidget(parent)
 {
     setMinimumSize(800, 600);
+
+    QSurfaceFormat surfaceFormat = format();
+    surfaceFormat.setSamples(16);
+    setFormat(surfaceFormat);
+
     setFocusPolicy(Qt::StrongFocus);
 
     m_pTraceList = new QList<Trace>();
