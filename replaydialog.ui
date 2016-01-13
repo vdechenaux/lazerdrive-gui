@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ReplayDialog</class>
+ <widget class="QDialog" name="ReplayDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>200</width>
+    <height>100</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QDialog {
+background:transparent;
+}
+
+QPushButton#pushButton_replay {
+color: rgb(4, 40, 80);
+border-radius: 30px;
+font-weight: bold;
+font-size: 30px;
+}</string>
+  </property>
+  <widget class="QPushButton" name="pushButton_replay">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>20</y>
+     <width>180</width>
+     <height>60</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>REPLAY</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

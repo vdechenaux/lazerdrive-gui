@@ -16,10 +16,14 @@ GameArea::GameArea(QWidget *parent) : QOpenGLWidget(parent)
     m_cheatImuneReversed = false;
 
     m_pUsernameDialog = new UsernameDialog(this);
+    m_pUsernameDialog->setVisible(false);
+    m_pReplayDialog = new ReplayDialog(this);
+    m_pReplayDialog->setVisible(false);
 
     m_pClient = new QLazerDriveClient(this);
     connect(m_pClient, SIGNAL(connected(QLazerDrivePlayer)), this, SLOT(clientConnected(QLazerDrivePlayer)));
     connect(m_pClient, SIGNAL(nextColorReceived(uint,uint,uint)), m_pUsernameDialog, SLOT(setColor(uint, uint, uint)));
+    connect(m_pClient, SIGNAL(nextColorReceived(uint,uint,uint)), m_pReplayDialog, SLOT(setColor(uint, uint, uint)));
     connect(m_pClient, SIGNAL(playerTraceInitialized(uint,uint,uint,uint,uint,uint,uint,uint)), this, SLOT(clientPlayerTraceInitialized(uint,uint,uint,uint,uint,uint,uint,uint)));
     connect(m_pClient, SIGNAL(playerMoved(uint,uint,uint,qreal)), this, SLOT(clientPlayerMoved(uint,uint,uint,qreal)));
     connect(m_pClient, SIGNAL(playerEnteredTheGame(QLazerDrivePlayer,bool,bool)), this, SLOT(clientPlayerEnteredTheGame(QLazerDrivePlayer,bool,bool)));
@@ -30,10 +34,13 @@ GameArea::GameArea(QWidget *parent) : QOpenGLWidget(parent)
     connect(m_pClient, SIGNAL(playerPrintChanged(uint,bool)), this, SLOT(clientPlayerPrintChanged(uint,bool)));
     connect(m_pClient, SIGNAL(playerImuneChanged(uint,bool)), this, SLOT(clientPlayerImuneChanged(uint,bool)));
     connect(m_pClient, SIGNAL(playerReversed(uint,bool)), this, SLOT(clientPlayerReversed(uint,bool)));
+    connect(m_pClient, SIGNAL(playerDead(uint,uint,QLazerDrivePlayer::DeathTypes,uint,uint,uint)), this, SLOT(clientPlayerDead(uint,uint,QLazerDrivePlayer::DeathTypes,uint,uint,uint)));
 
     connect(m_pUsernameDialog, SIGNAL(completed(QString)), m_pClient, SLOT(enterTheGame(QString)));
     connect(m_pUsernameDialog, SIGNAL(nextColor()), m_pClient, SLOT(nextColor()));
     connect(m_pUsernameDialog, SIGNAL(toogleReversedCheat(bool)), this, SLOT(toogleReversedCheat(bool)));
+
+    connect(m_pReplayDialog, SIGNAL(reviveClicked()), m_pClient, SLOT(revive()));
 
     m_pClient->connectToServer("one.eu.lazerdrive.io");
 
@@ -52,6 +59,7 @@ void GameArea::clientConnected(QLazerDrivePlayer player)
 {
     m_pUsernameDialog->setUsername(player.name());
     m_pUsernameDialog->setColor(player.r(), player.g(), player.b());
+    m_pReplayDialog->setColor(player.r(), player.g(), player.b());
     m_pUsernameDialog->show();
 }
 
@@ -111,6 +119,13 @@ void GameArea::clientPlayerReversed(uint playerId, bool isReversed)
     CacheEntry cached = m_pPlayerCache->value(playerId);
     cached.isReversed = isReversed;
     m_pPlayerCache->insert(playerId, cached);
+}
+
+void GameArea::clientPlayerDead(uint playerId, uint killerId, QLazerDrivePlayer::DeathTypes type, uint x, uint y, uint angle)
+{
+    if (playerId == m_playerId) {
+        m_pReplayDialog->show();
+    }
 }
 
 void GameArea::toogleReversedCheat(bool imune)

@@ -14,14 +14,17 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
     gamearea.cpp \
-    usernamedialog.cpp
+    usernamedialog.cpp \
+    replaydialog.cpp
 
 HEADERS  += \
     gamearea.h \
-    usernamedialog.h
+    usernamedialog.h \
+    replaydialog.h
 
 FORMS    += \
-    usernamedialog.ui
+    usernamedialog.ui \
+    replaydialog.ui
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/QLazerDriveClient/release/ -lQLazerDriveClient
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/QLazerDriveClient/debug/ -lQLazerDriveClient

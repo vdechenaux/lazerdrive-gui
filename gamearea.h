@@ -8,12 +8,14 @@
 #include <QLazerDrivePlayer>
 #include <QLazerDriveClient>
 #include "usernamedialog.h"
+#include "replaydialog.h"
 
 class GameArea : public QOpenGLWidget
 {
     Q_OBJECT
     QLazerDriveClient *m_pClient;
     UsernameDialog *m_pUsernameDialog;
+    ReplayDialog *m_pReplayDialog;
     QTimer m_RefreshTimer;
     uint m_playerId, m_avatarId;
     bool m_cheatImuneReversed;
@@ -61,6 +63,7 @@ private slots:
     void clientPlayerPrintChanged(uint playerId, bool isPrinting);
     void clientPlayerImuneChanged(uint playerId, bool isImune);
     void clientPlayerReversed(uint playerId, bool isReversed);
+    void clientPlayerDead(uint playerId, uint killerId, QLazerDrivePlayer::DeathTypes type, uint x, uint y, uint angle);
     void toogleReversedCheat(bool imune);
 private:
     QList<Trace> *m_pTraceList;
